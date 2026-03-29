@@ -1,4 +1,6 @@
+// Jasmine Sanders
 import java.net.*;
+import java.util.Scanner;
 
 public class EchoServer {
     public static void main(String[] args) throws Exception {
@@ -12,11 +14,27 @@ public class EchoServer {
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
             
             // TODO: Use the socket to 'receive' the packet here
+            socket.receive(packet);
             
             String received = new String(packet.getData(), 0, packet.getLength());
-            System.out.println("Received: " + received);
+            System.out.println("Echo Server intercepted:  " + received.trim() );
 
-            // TODO: Use the socket to 'send' the packet back to the client
+            // Step 1: Fetch a random technology quote from the web
+            Scanner s = new Scanner(URI.create("http://api.quotable.io/random?tags=technology").toURL().openStream());
+            String webData = s.useDelimiter("\\A").next();
+            s.close();
+
+             System.out.println("Quote fetched: " + webData);
+             
+            // Step 2: Send the fetched quote back to the client
+            InetAddress clientAddress = packet.getAddress();
+            int clientPort = packet.getPort();
+            byte[] responseBytes = webData.getBytes();
+            DatagramPacket response = new DatagramPacket(
+                responseBytes, responseBytes.length, clientAddress, clientPort
+            );
+            socket.send(response);
+
         }
     }
 }
